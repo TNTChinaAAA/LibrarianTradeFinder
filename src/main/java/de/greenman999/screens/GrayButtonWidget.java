@@ -51,6 +51,10 @@ public class GrayButtonWidget extends ButtonWidget {
         return id;
     }
 
+    public int getBottom() {
+        return this.getY() + this.getHeight();
+    }
+
     public static class Builder extends ButtonWidget.Builder {
         private final Text message;
         private final PressAction onPress;

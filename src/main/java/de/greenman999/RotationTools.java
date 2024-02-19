@@ -1,6 +1,7 @@
 package de.greenman999;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -33,6 +34,13 @@ public class RotationTools {
         elapsedTime = 0;
         prevTimeMillis = System.currentTimeMillis();
         isRotated = false;
+    }
+
+    public static Vec3d getEyesPos() {
+        MinecraftClient MC = MinecraftClient.getInstance();
+        ClientPlayerEntity player = MC.player;
+        float eyeHeight = player.getEyeHeight(player.getPose());
+        return player.getPos().add(0, eyeHeight, 0);
     }
 
     public static void render() {

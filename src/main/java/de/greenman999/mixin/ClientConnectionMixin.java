@@ -44,8 +44,13 @@ public class ClientConnectionMixin {
             }
         }else if(packet instanceof SetTradeOffersS2CPacket setTradeOffersS2CPacket && TradeFinder.state.equals(TradeState.WAITING_FOR_PACKET)) {
             AtomicBoolean found = new AtomicBoolean(false);
-            for(TradeOffer tradeOffer : setTradeOffersS2CPacket.getOffers()) {
+
+            for(int index = 0; index < setTradeOffersS2CPacket.getOffers().size(); index++) {
+                TradeOffer tradeOffer = setTradeOffersS2CPacket.getOffers().get(index);
+
                 if(!tradeOffer.getSellItem().getItem().equals(Items.ENCHANTED_BOOK)) continue;
+                int finalIndex = index;
+
                 EnchantmentHelper.get(tradeOffer.getSellItem()).forEach((enchantment, level) -> {
                     int maxBookPrice;
                     int minLevel;
@@ -61,6 +66,7 @@ public class ClientConnectionMixin {
                         minLevel = TradeFinder.minLevel;
                     }
                     if(tradeOffer.getOriginalFirstBuyItem().getCount() <= maxBookPrice && level >= minLevel) {
+                        TradeFinder.recipeIndex = finalIndex;
                         foundEnchantment(found, tradeOffer, enchantment, level);
                     }
                 });
@@ -77,6 +83,10 @@ public class ClientConnectionMixin {
         TradeFinder.stop();
         found.set(true);
         MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(Text.translatable("librarian-trade-finder.found", enchantment.getName(level), tradeOffer.getOriginalFirstBuyItem().getCount()).formatted(Formatting.GREEN));
+
+        if (LibrarianTradeFinder.getConfig().autoTradeMode) {
+            TradeFinder.needToBuy = true;
+        }
     }
 
 }

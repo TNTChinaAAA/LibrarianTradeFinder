@@ -1,10 +1,15 @@
 package de.greenman999;
 
 import de.greenman999.config.TradeFinderConfig;
+import de.greenman999.screens.ControlUi;
+import de.greenman999.screens.ResetLecternModeHandler;
+import de.greenman999.screens.SlowModeHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.LecternBlock;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ingame.MerchantScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.enchantment.Enchantment;
@@ -14,10 +19,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.AxeItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
+import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
@@ -25,8 +27,10 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.village.VillagerProfession;
@@ -43,6 +47,8 @@ public class TradeFinder {
 
     // When searching a single enchantment
     public static Enchantment enchantment = null;
+
+    public static boolean needToBuy = false;
     public static int maxBookPrice = 0;
     public static int minLevel = 0;
 
@@ -50,8 +56,12 @@ public class TradeFinder {
 
     private static Vec3d prevPos = null;
 
-    private static int placeDelay = 3;
-    private static int interactDelay = 2;
+    public static int placeDelay = 2;
+    public static int interactDelay = 2;
+
+    public static int resetDelay = 80;
+
+    public static int recipeIndex = 0;
 
     private static boolean startedBreakLook = false;
     private static boolean startedPlaceLook = false;
@@ -61,8 +71,6 @@ public class TradeFinder {
     private static boolean finishedCheckLook = false;
 
 
-
-
     public static void stop() {
         state = TradeState.IDLE;
 
@@ -70,7 +78,7 @@ public class TradeFinder {
         maxBookPrice = 0;
         minLevel = 0;
         tries = 0;
-
+        resetAllParams();
         MinecraftClient.getInstance().inGameHud.setOverlayMessage(Text.literal(""), false);
     }
 
@@ -160,19 +168,80 @@ public class TradeFinder {
     public static void tick() {
         MinecraftClient mc = MinecraftClient.getInstance();
 
-        if(state == TradeState.IDLE) return;
+        if(mc.currentScreen instanceof ControlUi) return;
         ClientPlayerEntity player = mc.player;
         if(player == null) return;
 
         if(TradeFinder.villager == null || TradeFinder.lecternPos == null) {
-            MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(Text.translatable("commands.tradefinder.start.not-selected").styled(style -> style.withColor(TextColor.fromFormatting(Formatting.RED))));
+            if (state != TradeState.IDLE)
+                MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(Text.translatable("commands.tradefinder.start.not-selected").styled(style -> style.withColor(TextColor.fromFormatting(Formatting.RED))));
             return;
         }
-        
+
+
+        if (!TradeFinder.villager.getWorld().equals(mc.player.getWorld())) {
+            stop();
+            //TODO: MinecraftClient.getInstance().inGameHud.getChatHud().addMessage("Not in the same world")
+            return;
+        } else if (player.squaredDistanceTo(villager) > 5) {
+            stop();
+            //TODO: MinecraftClient.getInstance().inGameHud.getChatHud().addMessage("Out of range")
+            return;
+        }
+
         switch (state) {
             case CHECK -> mc.inGameHud.setOverlayMessage(Text.translatable("librarian-trade-finder.actionbar.status.check", tries).formatted(Formatting.GRAY), false);
             case BREAK -> mc.inGameHud.setOverlayMessage(Text.translatable("librarian-trade-finder.actionbar.status.break", tries).formatted(Formatting.GRAY), false);
             case PLACE -> mc.inGameHud.setOverlayMessage(Text.translatable("librarian-trade-finder.actionbar.status.place", tries).formatted(Formatting.GRAY), false);
+            case IDLE -> {
+                if (needToBuy && !(mc.currentScreen instanceof MerchantScreen tradeScreen)) {
+                    if (LibrarianTradeFinder.getConfig().autoTradeMode) {
+                        TradeFinder.openTradeScreen();
+                    } else {
+                        needToBuy = false;
+                    }
+
+                    return;
+                }
+
+                if (mc.currentScreen instanceof MerchantScreen tradeScreen) {
+                    if (needToBuy) {
+                        if (LibrarianTradeFinder.getConfig().autoTradeMode) {
+                            tradeScreen.getScreenHandler().setRecipeIndex(recipeIndex);
+                            tradeScreen.getScreenHandler().switchTo(recipeIndex);
+                            mc.getNetworkHandler().sendPacket(new SelectMerchantTradeC2SPacket(recipeIndex));
+
+                            // buy whatever the villager is selling
+                            mc.interactionManager.clickSlot(
+                                    tradeScreen.getScreenHandler().syncId, 2, recipeIndex,
+                                    SlotActionType.PICKUP, mc.player);
+
+                            recipeIndex = 0;
+                        }
+
+                        // close the trade screen
+                        closeTradeScreen();
+                        needToBuy = false;
+                    }
+                }
+
+                return;
+            }
+        }
+
+        if (LibrarianTradeFinder.getConfig().resetLecternMode) {
+            if (state == TradeState.CHECK) {
+                if (villager.getVillagerData().getProfession().equals(VillagerProfession.NONE)) {
+                    if (resetDelay > 0) {
+                        resetDelay--;
+                    } else {
+                        finishedBreakLook = false;
+                        state = TradeState.BREAK;
+                        resetResetDelay();
+                        tries++;
+                    }
+                }
+            }
         }
 
         if((state == TradeState.CHECK || state == TradeState.WAITING_FOR_PACKET) && villager.getVillagerData().getProfession().equals(VillagerProfession.LIBRARIAN)) {
@@ -199,7 +268,8 @@ public class TradeFinder {
                     interactDelay--;
                     return;
                 }
-                interactDelay = 2;
+
+                interactDelay = Integer.parseInt(SlowModeHandler.interactDelay.getText());
             }
 
             ActionResult result = null;
@@ -218,6 +288,10 @@ public class TradeFinder {
             }
 
         } else if(state == TradeState.BREAK) {
+            if (LibrarianTradeFinder.getConfig().resetLecternMode) {
+                resetResetDelay();
+            }
+
             BlockPos toPlace = lecternPos.down();
             if(LibrarianTradeFinder.getConfig().legitMode && LibrarianTradeFinder.getConfig().slowMode) {
                 if(RotationTools.isRotated && !finishedBreakLook) {
@@ -244,6 +318,7 @@ public class TradeFinder {
                     return;
                 }
             }
+
             if (mc.world != null && mc.world.getBlockState(lecternPos).getBlock() instanceof LecternBlock && mc.interactionManager != null) {
                 player.swingHand(Hand.MAIN_HAND, true);
                 mc.interactionManager.updateBlockBreakingProgress(lecternPos, Direction.UP);
@@ -275,6 +350,7 @@ public class TradeFinder {
                     startedPlaceLook = true;
                     return;
                 }else if(!finishedPlaceLook) {
+                    //LibrarianTradeFinder.LOGGER.info("Not finish place look");
                     return;
                 }
 
@@ -287,7 +363,8 @@ public class TradeFinder {
                     placeDelay--;
                     return;
                 }
-                placeDelay = 3;
+
+                placeDelay = Integer.parseInt(SlowModeHandler.placeDelay.getText());
             }
 
 
@@ -320,6 +397,8 @@ public class TradeFinder {
                 }
             }
 
+            //LibrarianTradeFinder.LOGGER.info("Success reached!");
+
             BlockHitResult hit = new BlockHitResult(new Vec3d(lecternPos.getX(), lecternPos.getY(),
                     lecternPos.getZ()), Direction.UP, lecternPos.down(), false);
             if (mc.interactionManager != null) {
@@ -332,5 +411,79 @@ public class TradeFinder {
             finishedCheckLook = false;
             state = TradeState.CHECK;
         }
+    }
+
+    public static void openTradeScreen() {
+        MinecraftClient MC = MinecraftClient.getInstance();
+
+        if(MC.itemUseCooldown > 0)
+            return;
+
+        ClientPlayerInteractionManager im = MC.interactionManager;
+        ClientPlayerEntity player = MC.player;
+        // create realistic hit result
+        Box box = villager.getBoundingBox();
+        Vec3d start = RotationTools.getEyesPos();
+        Vec3d end = box.getCenter();
+        Vec3d hitVec = box.raycast(start, end).orElse(start);
+        EntityHitResult hitResult = new EntityHitResult(villager, hitVec);
+
+        // face end vector
+        if (LibrarianTradeFinder.getConfig().legitMode) {
+            player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, end);
+        }
+
+        // click on villager
+        Hand hand = Hand.MAIN_HAND;
+        ActionResult actionResult =
+                im.interactEntityAtLocation(player, villager, hitResult, hand);
+
+        if(!actionResult.isAccepted())
+            im.interactEntity(player, villager, hand);
+
+        // swing hand
+        if(actionResult.isAccepted() && actionResult.shouldSwingHand())
+            player.swingHand(hand);
+
+        // set cooldown
+        MC.itemUseCooldown = 4;
+    }
+
+    public static void closeTradeScreen() {
+        MinecraftClient MC = MinecraftClient.getInstance();
+        MC.player.closeHandledScreen();
+        MC.itemUseCooldown = 4;
+    }
+
+    public static void resetAllParams() {
+        resetResetDelay();
+        placeDelay = Integer.parseInt(SlowModeHandler.placeDelay.getText());
+        interactDelay = Integer.parseInt(SlowModeHandler.interactDelay.getText());
+        resetCheckLook();
+        resetBreakLook();
+        resetPlaceLook();
+    }
+
+    public static void resetCheckLook() {
+        RotationTools.isRotated = false;
+        startedCheckLook = false;
+        finishedCheckLook = false;
+    }
+
+    public static void resetBreakLook() {
+        RotationTools.isRotated = false;
+        startedBreakLook = false;
+        finishedBreakLook = false;
+    }
+
+    public static void resetPlaceLook() {
+        RotationTools.isRotated = false;
+        startedPlaceLook = false;
+        finishedPlaceLook = false;
+    }
+
+    public static void resetResetDelay() {
+        if (resetDelay != Integer.parseInt(ResetLecternModeHandler.delay.getText()))
+            resetDelay = Integer.parseInt(ResetLecternModeHandler.delay.getText());
     }
 }

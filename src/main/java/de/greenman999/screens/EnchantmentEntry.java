@@ -9,7 +9,6 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.TooltipBackgroundRenderer;
 import net.minecraft.client.gui.widget.EntryListWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.enchantment.Enchantment;
@@ -19,8 +18,8 @@ import net.minecraft.util.math.MathHelper;
 public class EnchantmentEntry extends EntryListWidget.Entry<EnchantmentEntry> {
 
     public final Enchantment enchantment;
-    public final TextFieldWidget maxPriceField;
-    public final TextFieldWidget levelField;
+    public final NumberFieldWidget maxPriceField;
+    public final NumberFieldWidget levelField;
     public int x;
     public int y;
     public int entryWidth;
@@ -36,15 +35,20 @@ public class EnchantmentEntry extends EntryListWidget.Entry<EnchantmentEntry> {
         this.enchantmentOption = LibrarianTradeFinder.getConfig().enchantments.get(enchantment);
 
         //maxPriceField = new TextFieldWidget(MinecraftClient.getInstance().textRenderer, 0, 0, 50, 20, Text.of("Max Price"));
-        maxPriceField = new TextFieldWidget(MinecraftClient.getInstance().textRenderer, 0, 0, 20, 14, Text.translatable("tradefinderui.enchantments.price.name"));
+        maxPriceField = new NumberFieldWidget(MinecraftClient.getInstance().textRenderer, 0, 0, 20, 14, Text.translatable("tradefinderui.enchantments.price.name"));
         maxPriceField.setMaxLength(2);
+        maxPriceField.setMinValue(5);
+        maxPriceField.setMaxValue(64);
         maxPriceField.setText(String.valueOf(enchantmentOption.getMaxPrice()));
+        maxPriceField.setDefaultValue(Integer.parseInt(maxPriceField.getText()));
         //maxPriceField.setDrawsBackground(false);
 
-        levelField = new TextFieldWidget(MinecraftClient.getInstance().textRenderer, 0, 0, 14, 14, Text.translatable("tradefinderui.enchantments.level.name"));
+        levelField = new NumberFieldWidget(MinecraftClient.getInstance().textRenderer, 0, 0, 14, 14, Text.translatable("tradefinderui.enchantments.level.name"));
         levelField.setMaxLength(1);
+        levelField.setMinValue(enchantment.getMinLevel());
+        levelField.setMaxValue(enchantment.getMaxLevel());
         levelField.setText(String.valueOf(enchantmentOption.getLevel()));
-
+        levelField.setDefaultValue(Integer.parseInt(levelField.getText()));
     }
 
     @Override
@@ -55,8 +59,10 @@ public class EnchantmentEntry extends EntryListWidget.Entry<EnchantmentEntry> {
         this.entryWidth = entryWidth;
         this.entryHeight = entryHeight;
 
+        /*
         if(!maxPriceField.getText().isEmpty() && !maxPriceField.isActive() && (Integer.parseInt(maxPriceField.getText()) > 64 || Integer.parseInt(maxPriceField.getText()) < 5)) maxPriceField.setText("64");
         if(!levelField.getText().isEmpty() && !levelField.isActive() && (Integer.parseInt(levelField.getText()) > enchantment.getMaxLevel() || Integer.parseInt(levelField.getText()) < 1)) levelField.setText(String.valueOf(enchantment.getMaxLevel()));
+         */
 
         enchantmentOption.setEnabled(enabled);
         enchantmentOption.setMaxPrice(!maxPriceField.getText().isEmpty() ? Integer.parseInt(maxPriceField.getText()) : 64);
@@ -80,11 +86,13 @@ public class EnchantmentEntry extends EntryListWidget.Entry<EnchantmentEntry> {
         matrices.translate(0, 0, 50);
         maxPriceField.setX(x + entryWidth - 21);
         maxPriceField.setY(y + 1);
+        maxPriceField.checkValue();
         maxPriceField.render(context, mouseX, mouseY, tickDelta);
 
         RenderSystem.enableDepthTest();
         levelField.setX(x + entryWidth - 21 - 15 - 14);
         levelField.setY(y + 1);
+        levelField.checkValue();
         levelField.render(context, mouseX, mouseY, tickDelta);
         RenderSystem.disableDepthTest();
         matrices.pop();

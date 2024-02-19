@@ -2,4 +2,11 @@ accessWidener	v1	named
 
 accessible class net/minecraft/client/gui/widget/EntryListWidget$Entry
 
+accessible field net/minecraft/client/gui/widget/TextFieldWidget editable Z
+accessible field net/minecraft/client/gui/widget/TextFieldWidget textRenderer Lnet/minecraft/client/font/TextRenderer;
+mutable field net/minecraft/client/gui/widget/TextFieldWidget textRenderer Lnet/minecraft/client/font/TextRenderer;
+
+accessible field net/minecraft/client/MinecraftClient itemUseCooldown I
+accessible method net/minecraft/client/MinecraftClient doItemUse ()V
+
 extendable	method	net/minecraft/client/gui/widget/EntryListWidget	getEntryAtPosition	(DD)Lnet/minecraft/client/gui/widget/EntryListWidget$Entry;

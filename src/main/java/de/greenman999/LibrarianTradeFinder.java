@@ -8,6 +8,9 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
@@ -93,6 +96,21 @@ public class LibrarianTradeFinder implements ClientModInitializer {
 							return 1;
 						}))
 				));
+
+		ClientConfigurationConnectionEvents.DISCONNECT.register((handler, client) -> {
+			LibrarianTradeFinder.LOGGER.info("Configuration Disconnect");
+			TradeFinder.stop();
+		});
+
+		ClientLoginConnectionEvents.DISCONNECT.register((handler, client) -> {
+			LibrarianTradeFinder.LOGGER.info("Login Disconnect");
+			TradeFinder.stop();
+		});
+
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+			LibrarianTradeFinder.LOGGER.info("Play Disconnect");
+			TradeFinder.stop();
+		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			TradeFinder.tick();

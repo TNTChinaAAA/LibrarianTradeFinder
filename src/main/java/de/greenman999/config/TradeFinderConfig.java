@@ -1,9 +1,10 @@
 package de.greenman999.config;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import de.greenman999.LibrarianTradeFinder;
+import de.greenman999.TradeFinder;
+import de.greenman999.screens.ResetLecternModeHandler;
+import de.greenman999.screens.SlowModeHandler;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.registry.Registries;
@@ -31,6 +32,10 @@ public class TradeFinderConfig {
     public boolean legitMode = true;
     public boolean slowMode = false;
 
+    public boolean resetLecternMode = false;
+
+    public boolean autoTradeMode = false;
+
     public HashMap<Enchantment, EnchantmentOption> enchantments = new HashMap<>();
 
     public void save() {
@@ -42,8 +47,16 @@ public class TradeFinderConfig {
             json.addProperty("preventAxeBreaking", preventAxeBreaking);
             json.addProperty("tpToVillager", tpToVillager);
             json.addProperty("legitMode", legitMode);
-            json.addProperty("slowMode", slowMode);
-
+            JsonObject slowMode_elements = new JsonObject();
+            slowMode_elements.addProperty("enabled", slowMode);
+            slowMode_elements.addProperty("placeDelay", Integer.parseInt(SlowModeHandler.placeDelay.getText()));
+            slowMode_elements.addProperty("interactDelay", Integer.parseInt(SlowModeHandler.interactDelay.getText()));
+            json.add("slowMode", slowMode_elements);
+            JsonObject resetLecternMode_elements = new JsonObject();
+            resetLecternMode_elements.addProperty("enabled", resetLecternMode);
+            resetLecternMode_elements.addProperty("delay", Integer.parseInt(ResetLecternModeHandler.delay.getText()));
+            json.add("resetLecternMode", resetLecternMode_elements);
+            json.addProperty("autoTradeMode", autoTradeMode);
             JsonObject enchantmentsJson = new JsonObject();
             enchantments.forEach((enchantment, enchantmentOption) -> enchantmentsJson.add(Registries.ENCHANTMENT.getEntry(enchantment).getKey().orElseThrow().getValue().toString(), enchantmentOption.toJson()));
             json.add("enchantments", enchantmentsJson);
@@ -69,8 +82,54 @@ public class TradeFinderConfig {
                     tpToVillager = json.getAsJsonPrimitive("tpToVillager").getAsBoolean();
                 if (json.has("legitMode"))
                     legitMode = json.getAsJsonPrimitive("legitMode").getAsBoolean();
-                if (json.has("slowMode"))
-                    slowMode = json.getAsJsonPrimitive("slowMode").getAsBoolean();
+                if (json.has("slowMode")) {
+                    if (json.get("slowMode").isJsonObject()) {
+                        JsonObject slowMode_elements = json.getAsJsonObject("slowMode");
+
+                        if (slowMode_elements.has("enabled"))
+                            slowMode = slowMode_elements.getAsJsonPrimitive("enabled").getAsBoolean();
+                        if (slowMode_elements.has("placeDelay")) {
+                            int placeDelay = slowMode_elements.getAsJsonPrimitive("placeDelay").getAsInt();
+
+                            if (placeDelay > 2 && placeDelay < 1000) {
+                                TradeFinder.placeDelay = placeDelay;
+                                SlowModeHandler.placeDelay.setText(String.valueOf(placeDelay));
+                                SlowModeHandler.placeDelay.setLastText(String.valueOf(placeDelay));
+                            }
+                        }
+
+                        if (slowMode_elements.has("interactDelay")) {
+                            int interactDelay = slowMode_elements.getAsJsonPrimitive("interactDelay").getAsInt();
+
+                            if (interactDelay > 2 && interactDelay < 1000) {
+                                TradeFinder.interactDelay = interactDelay;
+                                SlowModeHandler.interactDelay.setText(String.valueOf(interactDelay));
+                                SlowModeHandler.interactDelay.setLastText(String.valueOf(interactDelay));
+                            }
+                        }
+                    }
+                }
+
+                if (json.has("resetLecternMode")) {
+                    if (json.get("resetLecternMode").isJsonObject()) {
+                        JsonObject resetLecternMode_elements = json.getAsJsonObject("resetLecternMode");
+
+                        if (resetLecternMode_elements.has("enabled"))
+                            resetLecternMode = resetLecternMode_elements.getAsJsonPrimitive("enabled").getAsBoolean();
+                        if (resetLecternMode_elements.has("delay")) {
+                            int delay = resetLecternMode_elements.getAsJsonPrimitive("delay").getAsInt();
+
+                            if (delay > 2 && delay < 1000) {
+                                TradeFinder.resetDelay = delay;
+                                ResetLecternModeHandler.delay.setText(String.valueOf(delay));
+                                ResetLecternModeHandler.delay.setLastText(String.valueOf(delay));
+                            }
+                        }
+                    }
+                }
+
+                if (json.has("autoTradeMode"))
+                    autoTradeMode = json.getAsJsonPrimitive("autoTradeMode").getAsBoolean();
                 if (json.has("enchantments")) {
                     JsonObject enchantmentsJson = json.getAsJsonObject("enchantments");
                     enchantmentsJson.entrySet().forEach(entry -> {
@@ -161,9 +220,11 @@ public class TradeFinderConfig {
             return maxPrice;
         }
 
+        /*
         public String getName() {
             return enchantment.getName(level).copy().formatted(Formatting.WHITE).getString();
         }
+         */
     }
 
 }
