@@ -13,7 +13,7 @@ public class RotationTools {
     private static float destYaw = 0;
     private static float startPitch = 0;
     private static float startYaw = 0;
-    private static float speed = 0;
+    public static float speed = 0;
     private static float elapsedTime = 0;
     private static long prevTimeMillis = 0;
 
@@ -29,7 +29,12 @@ public class RotationTools {
         destYaw = MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F);
         startPitch = mc.player.getPitch();
         startYaw = mc.player.getYaw();
-        if(destPitch == startPitch && destYaw == startYaw) return;
+
+        if(destPitch == startPitch && destYaw == startYaw) {
+            isRotated = true;
+            return;
+        }
+
         RotationTools.speed = speed / 10f;
         elapsedTime = 0;
         prevTimeMillis = System.currentTimeMillis();

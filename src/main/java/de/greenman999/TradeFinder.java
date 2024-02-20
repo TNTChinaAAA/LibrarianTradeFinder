@@ -35,6 +35,8 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.village.VillagerProfession;
 
+import java.util.Random;
+
 
 @SuppressWarnings("DuplicatedCode")
 public class TradeFinder {
@@ -70,6 +72,9 @@ public class TradeFinder {
     private static boolean finishedPlaceLook = false;
     private static boolean finishedCheckLook = false;
 
+    private static boolean startedAimLook = false;
+
+    private static boolean finishedAimLook = false;
 
     public static void stop() {
         state = TradeState.IDLE;
@@ -190,7 +195,7 @@ public class TradeFinder {
         }
 
         switch (state) {
-            case CHECK -> mc.inGameHud.setOverlayMessage(Text.translatable("librarian-trade-finder.actionbar.status.check", tries).formatted(Formatting.GRAY), false);
+            case CHECK, AIM -> mc.inGameHud.setOverlayMessage(Text.translatable("librarian-trade-finder.actionbar.status.check", tries).formatted(Formatting.GRAY), false);
             case BREAK -> mc.inGameHud.setOverlayMessage(Text.translatable("librarian-trade-finder.actionbar.status.break", tries).formatted(Formatting.GRAY), false);
             case PLACE -> mc.inGameHud.setOverlayMessage(Text.translatable("librarian-trade-finder.actionbar.status.place", tries).formatted(Formatting.GRAY), false);
             case IDLE -> {
@@ -235,13 +240,41 @@ public class TradeFinder {
                     if (resetDelay > 0) {
                         resetDelay--;
                     } else {
-                        finishedBreakLook = false;
-                        state = TradeState.BREAK;
-                        resetResetDelay();
-                        tries++;
+                        resetAllParams();
+                        state = TradeState.AIM;
                     }
+                } else if (villager.getVillagerData().getProfession().equals(VillagerProfession.LIBRARIAN)) {
+                    resetResetDelay();
                 }
+            } else if (state == TradeState.WAITING_FOR_PACKET) {
+                resetResetDelay();
+            } else if (state == TradeState.AIM) {
+                resetResetDelay();
             }
+        }
+
+        if (state == TradeState.AIM) {
+            Vec3d villagerPosition = new Vec3d(villager.getX(), villager.getY() + (double) villager.getEyeHeight(EntityPose.STANDING), villager.getZ());
+
+            if(LibrarianTradeFinder.getConfig().legitMode && LibrarianTradeFinder.getConfig().slowMode) {
+                if(RotationTools.isRotated && !finishedAimLook) {
+                    finishedAimLook = true;
+                    startedAimLook = false;
+                    RotationTools.isRotated = false;
+                }else if(!startedAimLook && !finishedAimLook) {
+                    RotationTools.smoothLookAt(villagerPosition, 3);
+                    startedAimLook = true;
+                    return;
+                }else if(!finishedAimLook) {
+                    return;
+                }
+            } else if (LibrarianTradeFinder.getConfig().legitMode) {
+                player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, villagerPosition);
+            }
+
+            resetAllParams();
+            state = TradeState.BREAK;
+            tries++;
         }
 
         if((state == TradeState.CHECK || state == TradeState.WAITING_FOR_PACKET) && villager.getVillagerData().getProfession().equals(VillagerProfession.LIBRARIAN)) {
@@ -303,6 +336,7 @@ public class TradeFinder {
                     startedBreakLook = true;
                     return;
                 }else if(!finishedBreakLook) {
+                    //printLookParams();
                     return;
                 }
             } else if (LibrarianTradeFinder.getConfig().legitMode) {
@@ -325,7 +359,8 @@ public class TradeFinder {
                 player.networkHandler
                         .sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
             }else {
-                finishedPlaceLook = false;
+                //finishedPlaceLook = false;
+                resetAllParams();
                 state = TradeState.PLACE;
                 if(LibrarianTradeFinder.getConfig().tpToVillager && mc.getNetworkHandler() != null) {
                     prevPos = mc.player.getPos();
@@ -334,6 +369,10 @@ public class TradeFinder {
             }
 
         } else if (state == TradeState.PLACE) {
+            if (LibrarianTradeFinder.getConfig().resetLecternMode) {
+                resetResetDelay();
+            }
+
             if(LibrarianTradeFinder.getConfig().tpToVillager && mc.getNetworkHandler() != null) {
                 mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(prevPos.x, prevPos.y, prevPos.z, true));
             }
@@ -351,6 +390,7 @@ public class TradeFinder {
                     return;
                 }else if(!finishedPlaceLook) {
                     //LibrarianTradeFinder.LOGGER.info("Not finish place look");
+                    //printLookParams();
                     return;
                 }
 
@@ -408,7 +448,8 @@ public class TradeFinder {
                         .sendPacket(new HandSwingC2SPacket(Hand.OFF_HAND));
             }
 
-            finishedCheckLook = false;
+            //finishedCheckLook = false;
+            resetAllParams();
             state = TradeState.CHECK;
         }
     }
@@ -462,28 +503,73 @@ public class TradeFinder {
         resetCheckLook();
         resetBreakLook();
         resetPlaceLook();
+        resetAimLook();
     }
 
     public static void resetCheckLook() {
-        RotationTools.isRotated = false;
+        if (RotationTools.isRotated) {
+            RotationTools.isRotated = false;
+        }
+
+        /*if (RotationTools.speed != 0) {
+            RotationTools.speed = 0;
+        }*/
+
         startedCheckLook = false;
         finishedCheckLook = false;
     }
 
     public static void resetBreakLook() {
-        RotationTools.isRotated = false;
+        if (RotationTools.isRotated) {
+            RotationTools.isRotated = false;
+        }
+
+        /*if (RotationTools.speed != 0) {
+            RotationTools.speed = 0;
+        }*/
+
         startedBreakLook = false;
         finishedBreakLook = false;
     }
 
     public static void resetPlaceLook() {
-        RotationTools.isRotated = false;
+        if (RotationTools.isRotated) {
+            RotationTools.isRotated = false;
+        }
+
+        /*if (RotationTools.speed != 0) {
+            RotationTools.speed = 0;
+        }*/
+
         startedPlaceLook = false;
         finishedPlaceLook = false;
     }
 
+    public static void resetAimLook() {
+        if (RotationTools.isRotated) {
+            RotationTools.isRotated = false;
+        }
+
+        startedAimLook = false;
+        finishedAimLook = false;
+    }
+
     public static void resetResetDelay() {
-        if (resetDelay != Integer.parseInt(ResetLecternModeHandler.delay.getText()))
-            resetDelay = Integer.parseInt(ResetLecternModeHandler.delay.getText());
+        boolean a = new Random().nextBoolean();
+        int b = new Random().nextInt(3);
+        resetDelay = Integer.parseInt(ResetLecternModeHandler.delay.getText()) + (a ? -b : b);
+    }
+
+    public static void printLookParams() {
+        LibrarianTradeFinder.LOGGER.info("--------------------------------------------");
+        LibrarianTradeFinder.LOGGER.info("Speed: " + RotationTools.speed);
+        LibrarianTradeFinder.LOGGER.info("Rotated: " + RotationTools.isRotated);
+        LibrarianTradeFinder.LOGGER.info("Finished Check Look: " + finishedCheckLook);
+        LibrarianTradeFinder.LOGGER.info("Started Check Look: " + startedCheckLook);
+        LibrarianTradeFinder.LOGGER.info("Finished Break Look: " + finishedBreakLook);
+        LibrarianTradeFinder.LOGGER.info("Started Break Look: " + startedBreakLook);
+        LibrarianTradeFinder.LOGGER.info("Finished Place Look: " + finishedPlaceLook);
+        LibrarianTradeFinder.LOGGER.info("Started Place Look: " + startedPlaceLook);
+        LibrarianTradeFinder.LOGGER.info("--------------------------------------------");
     }
 }

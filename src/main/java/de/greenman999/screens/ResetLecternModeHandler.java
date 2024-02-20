@@ -14,11 +14,11 @@ public class ResetLecternModeHandler {
 
     static {
         delay.setMaxLength(3);
-        delay.setText("80");
-        delay.setMinValue(80);
+        delay.setText("83");
+        delay.setMinValue(83);
         delay.setMaxValue(999);
-        delay.setDefaultValue(80);
-        delay.setLastText("80");
+        delay.setDefaultValue(83);
+        delay.setLastText("83");
     }
 
     public ResetLecternModeHandler(ControlUi ui) {

@@ -71,6 +71,7 @@ public class ClientConnectionMixin {
                     }
                 });
             }
+
             if(!found.get()) {
                 TradeFinder.state = TradeState.BREAK;
                 TradeFinder.tries++;
