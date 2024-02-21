@@ -7,8 +7,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-
-import java.util.Collection;
 import java.util.List;
 
 public class InGameHudHandler {
@@ -21,11 +19,11 @@ public class InGameHudHandler {
         }
 
         MinecraftClient mc = MinecraftClient.getInstance();
-        Text a = null;
-        Text checkText = Text.translatable("librarian-trade-finder.actionbar.status.check", TradeFinder.tries).formatted(Formatting.GRAY);
-        Text waitText = Text.translatable("librarian-trade-finder.actionbar.status.wait", TradeFinder.tries).formatted(Formatting.GRAY);
-        Text breakText = Text.translatable("librarian-trade-finder.actionbar.status.break", TradeFinder.tries).formatted(Formatting.GRAY);
-        Text placeText = Text.translatable("librarian-trade-finder.actionbar.status.place", TradeFinder.tries).formatted(Formatting.GRAY);
+        MutableText a = null;
+        MutableText checkText = Text.translatable("librarian-trade-finder.actionbar.status.check", TradeFinder.tries).formatted(Formatting.GRAY);
+        MutableText waitText = Text.translatable("librarian-trade-finder.actionbar.status.wait", TradeFinder.tries).formatted(Formatting.GRAY);
+        MutableText breakText = Text.translatable("librarian-trade-finder.actionbar.status.break", TradeFinder.tries).formatted(Formatting.GRAY);
+        MutableText placeText = Text.translatable("librarian-trade-finder.actionbar.status.place", TradeFinder.tries).formatted(Formatting.GRAY);
 
         switch (TradeFinder.state) {
             case CHECK, AIM -> a = checkText;
@@ -39,7 +37,9 @@ public class InGameHudHandler {
         if (isInGameHudNull()) {
             mc.inGameHud.setOverlayMessage(a, false);
         } else {
-            mc.inGameHud.setOverlayMessage(mc.inGameHud.overlayMessage.copy().append("\n").append(a).formatted(Formatting.GRAY), false);
+            MutableText b = Text.literal("\n").append(a);
+            mc.inGameHud.setOverlayMessage(mc.inGameHud.overlayMessage.copy().append(b), false);
+            a = b;
         }
 
         lastText = a;
