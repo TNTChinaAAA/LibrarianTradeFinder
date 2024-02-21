@@ -42,19 +42,6 @@ public class InGameHudHandler {
         } else {
             mc.inGameHud.setOverlayMessage(mc.inGameHud.overlayMessage.copy().append("\n").append(a).formatted(Formatting.GRAY), false);
         }
-        /*if (a != null) {
-            Text inGameText_1 = mc.inGameHud.overlayMessage;
-
-            if (inGameText_1 != null) {
-                HandleInGameText(a);
-            } else {
-                inGameText = null;
-                mc.inGameHud.setOverlayMessage(a, false);
-            }
-
-        } else {
-
-        }*/
 
         lastText = a;
     }
@@ -78,35 +65,16 @@ public class InGameHudHandler {
         Text overlayMessage = MinecraftClient.getInstance().inGameHud.overlayMessage;
 
         if (overlayMessage != null) {
+            if (!(overlayMessage instanceof MutableText)) {
+                overlayMessage = overlayMessage.copy();
+                MinecraftClient.getInstance().inGameHud.overlayMessage = overlayMessage;
+            }
+
             List<Text> siblings = overlayMessage.getSiblings();
 
             if (siblings != null) {
-                    siblings.remove(lastText);
+                siblings.remove(lastText);
             }
-        }
-    }
-
-    private static void HandleInGameText(Text a) {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        Text inGameText_1 = mc.inGameHud.overlayMessage;
-
-        if (!inGameText_1.getLiteralString().equals("")) {
-            if (inGameText != null) {
-                if (!inGameText.getLiteralString().equals("")) {
-                    MutableText copy = inGameText.copy();
-                    copy.append(a);
-                    mc.inGameHud.setOverlayMessage(copy, false);
-                } else {
-                    mc.inGameHud.setOverlayMessage(a, false);
-                }
-            } else {
-                mc.inGameHud.setOverlayMessage(a, false);
-            }
-
-            inGameText = inGameText_1;
-        } else {
-            inGameText = null;
-            mc.inGameHud.setOverlayMessage(a, false);
         }
     }
 }

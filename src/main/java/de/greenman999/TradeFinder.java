@@ -173,6 +173,7 @@ public class TradeFinder {
 
     public static void tick() {
         MinecraftClient mc = MinecraftClient.getInstance();
+        //LibrarianTradeFinder.LOGGER.info("AD");
 
         if(mc.currentScreen instanceof ControlUi) return;
         ClientPlayerEntity player = mc.player;
