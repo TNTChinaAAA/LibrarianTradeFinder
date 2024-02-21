@@ -1,6 +1,8 @@
-package de.greenman999.screens;
+package de.greenman999.gui.handler;
 
 import de.greenman999.LibrarianTradeFinder;
+import de.greenman999.gui.screens.ControlUi;
+import de.greenman999.gui.screens.NumberFieldWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;

@@ -12,6 +12,7 @@
   "commands.tradefinder.select.not-looking-at-lectern": "You are not looking at a lectern.",
   "commands.tradefinder.select.no-librarian-found": "No librarian found.",
   "librarian-trade-finder.actionbar.status.check": "checking trade --- attempt: %d",
+  "librarian-trade-finder.actionbar.status.wait": "waiting for packets --- attempt: %d",
   "librarian-trade-finder.actionbar.status.break": "breaking lectern --- attempt: %d",
   "librarian-trade-finder.actionbar.status.place": "placing lectern --- attempt: %d",
   "librarian-trade-finder.check.interact.failed": "Failed to interact with villager. Try again.",

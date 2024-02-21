@@ -1,7 +1,9 @@
-package de.greenman999.screens;
+package de.greenman999.gui.screens;
 
 import de.greenman999.LibrarianTradeFinder;
 import de.greenman999.TradeFinder;
+import de.greenman999.gui.handler.ResetLecternModeHandler;
+import de.greenman999.gui.handler.SlowModeHandler;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;

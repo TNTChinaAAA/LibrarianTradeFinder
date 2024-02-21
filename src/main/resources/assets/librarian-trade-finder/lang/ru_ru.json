@@ -12,6 +12,7 @@
   "commands.tradefinder.select.not-looking-at-lectern": "Вы не смотрите на кафедру.",
   "commands.tradefinder.select.no-librarian-found": "Библиотекарь не найден.",
   "librarian-trade-finder.actionbar.status.check": "проверка товаров --- попытка: %d",
+  "librarian-trade-finder.actionbar.status.wait": "ожидание пакетов --- попытка: %d",
   "librarian-trade-finder.actionbar.status.break": "кафедра сломана --- попытка: %d",
   "librarian-trade-finder.actionbar.status.place": "кафедра поставлена --- попытка: %d",
   "librarian-trade-finder.check.interact.failed": "Ошибка взаимодействия с жителем. Попробуйте снова.",

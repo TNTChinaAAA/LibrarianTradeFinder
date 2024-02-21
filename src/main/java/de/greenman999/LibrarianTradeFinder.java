@@ -2,7 +2,8 @@ package de.greenman999;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import de.greenman999.config.TradeFinderConfig;
-import de.greenman999.screens.ControlUi;
+import de.greenman999.gui.handler.InGameHudHandler;
+import de.greenman999.gui.screens.ControlUi;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -12,12 +13,14 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationConnectio
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.command.argument.RegistryEntryArgumentType;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
@@ -141,15 +144,16 @@ public class LibrarianTradeFinder implements ClientModInitializer {
 			}
 		});
 
-		WorldRenderEvents.END.register(context -> RotationTools.render());
+		WorldRenderEvents.END.register(context -> {
+			InGameHudHandler.render(context);
+			RotationTools.render();
+		});
 
 		getConfig().load();
-
 		LOGGER.info("Librarian Trade Finder initialized.");
 	}
 
 	public static TradeFinderConfig getConfig() {
 		return TradeFinderConfig.INSTANCE;
 	}
-
 }

@@ -12,6 +12,7 @@
   "commands.tradefinder.select.not-looking-at-lectern": "Sie schauen kein Lesepult an.",
   "commands.tradefinder.select.no-librarian-found": "Es wurde kein Bibliothekar gefunden.",
   "librarian-trade-finder.actionbar.status.check": "Handel prüfen --- Versuch: %d",
+  "librarian-trade-finder.actionbar.status.wait": "warten auf Pakete --- Versuch: %d",
   "librarian-trade-finder.actionbar.status.break": "Abbauen des Lesepults --- Versuch: %d",
   "librarian-trade-finder.actionbar.status.place": "Lesepult platzieren --- Versuch: %d",
   "librarian-trade-finder.check.interact.failed": "Interaktion mit Dorfbewohner fehlgeschlagen. Versuchen Sie es erneut.",

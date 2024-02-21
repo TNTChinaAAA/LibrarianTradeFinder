@@ -1,9 +1,10 @@
 package de.greenman999;
 
 import de.greenman999.config.TradeFinderConfig;
-import de.greenman999.screens.ControlUi;
-import de.greenman999.screens.ResetLecternModeHandler;
-import de.greenman999.screens.SlowModeHandler;
+import de.greenman999.gui.handler.InGameHudHandler;
+import de.greenman999.gui.screens.ControlUi;
+import de.greenman999.gui.handler.ResetLecternModeHandler;
+import de.greenman999.gui.handler.SlowModeHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.LecternBlock;
 import net.minecraft.client.MinecraftClient;
@@ -84,7 +85,7 @@ public class TradeFinder {
         minLevel = 0;
         tries = 0;
         resetAllParams();
-        MinecraftClient.getInstance().inGameHud.setOverlayMessage(Text.literal(""), false);
+        InGameHudHandler.removeLastTextFromInGameHud();
     }
 
     public static int searchList() {
@@ -183,6 +184,40 @@ public class TradeFinder {
             return;
         }
 
+        if (state == TradeState.IDLE) {
+            if (needToBuy && !(mc.currentScreen instanceof MerchantScreen)) {
+                if (LibrarianTradeFinder.getConfig().autoTradeMode) {
+                    TradeFinder.openTradeScreen();
+                } else {
+                    needToBuy = false;
+                }
+
+                return;
+            }
+
+            if (mc.currentScreen instanceof MerchantScreen tradeScreen) {
+                if (needToBuy) {
+                    if (LibrarianTradeFinder.getConfig().autoTradeMode) {
+                        tradeScreen.getScreenHandler().setRecipeIndex(recipeIndex);
+                        tradeScreen.getScreenHandler().switchTo(recipeIndex);
+                        mc.getNetworkHandler().sendPacket(new SelectMerchantTradeC2SPacket(recipeIndex));
+
+                        // buy whatever the villager is selling
+                        mc.interactionManager.clickSlot(
+                                tradeScreen.getScreenHandler().syncId, 2, recipeIndex,
+                                SlotActionType.PICKUP, mc.player);
+
+                        recipeIndex = 0;
+                    }
+
+                    // close the trade screen
+                    closeTradeScreen();
+                    needToBuy = false;
+                }
+            }
+
+            return;
+        }
 
         if (!TradeFinder.villager.getWorld().equals(mc.player.getWorld())) {
             stop();
@@ -192,46 +227,6 @@ public class TradeFinder {
             stop();
             //TODO: MinecraftClient.getInstance().inGameHud.getChatHud().addMessage("Out of range")
             return;
-        }
-
-        switch (state) {
-            case CHECK, AIM -> mc.inGameHud.setOverlayMessage(Text.translatable("librarian-trade-finder.actionbar.status.check", tries).formatted(Formatting.GRAY), false);
-            case BREAK -> mc.inGameHud.setOverlayMessage(Text.translatable("librarian-trade-finder.actionbar.status.break", tries).formatted(Formatting.GRAY), false);
-            case PLACE -> mc.inGameHud.setOverlayMessage(Text.translatable("librarian-trade-finder.actionbar.status.place", tries).formatted(Formatting.GRAY), false);
-            case IDLE -> {
-                if (needToBuy && !(mc.currentScreen instanceof MerchantScreen tradeScreen)) {
-                    if (LibrarianTradeFinder.getConfig().autoTradeMode) {
-                        TradeFinder.openTradeScreen();
-                    } else {
-                        needToBuy = false;
-                    }
-
-                    return;
-                }
-
-                if (mc.currentScreen instanceof MerchantScreen tradeScreen) {
-                    if (needToBuy) {
-                        if (LibrarianTradeFinder.getConfig().autoTradeMode) {
-                            tradeScreen.getScreenHandler().setRecipeIndex(recipeIndex);
-                            tradeScreen.getScreenHandler().switchTo(recipeIndex);
-                            mc.getNetworkHandler().sendPacket(new SelectMerchantTradeC2SPacket(recipeIndex));
-
-                            // buy whatever the villager is selling
-                            mc.interactionManager.clickSlot(
-                                    tradeScreen.getScreenHandler().syncId, 2, recipeIndex,
-                                    SlotActionType.PICKUP, mc.player);
-
-                            recipeIndex = 0;
-                        }
-
-                        // close the trade screen
-                        closeTradeScreen();
-                        needToBuy = false;
-                    }
-                }
-
-                return;
-            }
         }
 
         if (LibrarianTradeFinder.getConfig().resetLecternMode) {

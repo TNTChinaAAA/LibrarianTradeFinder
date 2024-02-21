@@ -1,4 +1,4 @@
-package de.greenman999.screens;
+package de.greenman999.gui.screens;
 
 import de.greenman999.LibrarianTradeFinder;
 import de.greenman999.TradeFinder;

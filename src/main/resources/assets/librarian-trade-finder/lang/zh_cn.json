@@ -12,6 +12,7 @@
   "commands.tradefinder.select.not-looking-at-lectern": "请将视线对准讲台。",
   "commands.tradefinder.select.no-librarian-found": "未找到图书管理员。",
   "librarian-trade-finder.actionbar.status.check": "检查交易 --- 第%d次尝试",
+  "librarian-trade-finder.actionbar.status.wait": "等待发包 --- 第%d次尝试",
   "librarian-trade-finder.actionbar.status.break": "破坏讲台 --- 第%d次尝试",
   "librarian-trade-finder.actionbar.status.place": "放置讲台 --- 第%d次尝试",
   "librarian-trade-finder.check.interact.failed": "未能与村民互动。重试一次。",
