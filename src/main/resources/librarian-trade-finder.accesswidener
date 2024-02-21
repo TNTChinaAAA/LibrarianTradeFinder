@@ -8,6 +8,8 @@ mutable field net/minecraft/client/gui/widget/TextFieldWidget textRenderer Lnet/
 
 accessible field net/minecraft/client/gui/hud/InGameHud overlayMessage Lnet/minecraft/text/Text;
 
+# accessible field net/minecraft/client/gui/screen/Screen textRenderer Lnet/minecraft/client/font/TextRenderer;
+
 accessible field net/minecraft/client/MinecraftClient itemUseCooldown I
 accessible method net/minecraft/client/MinecraftClient doItemUse ()V
 

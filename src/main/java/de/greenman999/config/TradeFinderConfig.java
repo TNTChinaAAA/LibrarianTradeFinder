@@ -54,7 +54,8 @@ public class TradeFinderConfig {
             json.add("slowMode", slowMode_elements);
             JsonObject resetLecternMode_elements = new JsonObject();
             resetLecternMode_elements.addProperty("enabled", resetLecternMode);
-            resetLecternMode_elements.addProperty("delay", Integer.parseInt(ResetLecternModeHandler.delay.getText()));
+            resetLecternMode_elements.addProperty("resetDelay", Integer.parseInt(ResetLecternModeHandler.resetDelay.getText()));
+            //TODO: add aim delay.
             json.add("resetLecternMode", resetLecternMode_elements);
             json.addProperty("autoTradeMode", autoTradeMode);
             JsonObject enchantmentsJson = new JsonObject();
@@ -91,7 +92,7 @@ public class TradeFinderConfig {
                         if (slowMode_elements.has("placeDelay")) {
                             int placeDelay = slowMode_elements.getAsJsonPrimitive("placeDelay").getAsInt();
 
-                            if (placeDelay > 2 && placeDelay < 1000) {
+                            if (placeDelay >= SlowModeHandler.placeDelay.minValue && placeDelay <= SlowModeHandler.placeDelay.maxValue) {
                                 TradeFinder.placeDelay = placeDelay;
                                 SlowModeHandler.placeDelay.setText(String.valueOf(placeDelay));
                                 SlowModeHandler.placeDelay.setLastText(String.valueOf(placeDelay));
@@ -101,7 +102,7 @@ public class TradeFinderConfig {
                         if (slowMode_elements.has("interactDelay")) {
                             int interactDelay = slowMode_elements.getAsJsonPrimitive("interactDelay").getAsInt();
 
-                            if (interactDelay > 2 && interactDelay < 1000) {
+                            if (interactDelay >= SlowModeHandler.interactDelay.minValue && interactDelay <= SlowModeHandler.interactDelay.maxValue) {
                                 TradeFinder.interactDelay = interactDelay;
                                 SlowModeHandler.interactDelay.setText(String.valueOf(interactDelay));
                                 SlowModeHandler.interactDelay.setLastText(String.valueOf(interactDelay));
@@ -116,14 +117,20 @@ public class TradeFinderConfig {
 
                         if (resetLecternMode_elements.has("enabled"))
                             resetLecternMode = resetLecternMode_elements.getAsJsonPrimitive("enabled").getAsBoolean();
-                        if (resetLecternMode_elements.has("delay")) {
-                            int delay = resetLecternMode_elements.getAsJsonPrimitive("delay").getAsInt();
+                        if (resetLecternMode_elements.has("resetDelay")) {
+                            int resetDelay = resetLecternMode_elements.getAsJsonPrimitive("resetDelay").getAsInt();
 
-                            if (delay > 2 && delay < 1000) {
-                                TradeFinder.resetDelay = delay;
-                                ResetLecternModeHandler.delay.setText(String.valueOf(delay));
-                                ResetLecternModeHandler.delay.setLastText(String.valueOf(delay));
+                            if (resetDelay >= ResetLecternModeHandler.resetDelay.minValue && resetDelay < ResetLecternModeHandler.resetDelay.maxValue) {
+                                TradeFinder.resetDelay = resetDelay;
+                                ResetLecternModeHandler.resetDelay.setText(String.valueOf(resetDelay));
+                                ResetLecternModeHandler.resetDelay.setLastText(String.valueOf(resetDelay));
                             }
+                        }
+
+                        if (resetLecternMode_elements.has("aimDelay")) {
+                            int aimDelay = resetLecternMode_elements.getAsJsonPrimitive("aimDelay").getAsInt();
+
+                            //TODO: add aimDelay load.
                         }
                     }
                 }

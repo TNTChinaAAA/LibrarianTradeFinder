@@ -107,4 +107,8 @@ public class SlowModeHandler {
         return a || b;
     }
 
+    public static void checkValueWhenClose() {
+        placeDelay.checkValueWhenClose();
+        interactDelay.checkValueWhenClose();
+    }
 }

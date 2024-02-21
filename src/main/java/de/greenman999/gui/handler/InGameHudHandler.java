@@ -8,11 +8,10 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.Collection;
 import java.util.List;
 
 public class InGameHudHandler {
-
-    private static Text inGameText = null;
 
     private static Text lastText = null;
 
@@ -65,15 +64,17 @@ public class InGameHudHandler {
         Text overlayMessage = MinecraftClient.getInstance().inGameHud.overlayMessage;
 
         if (overlayMessage != null) {
-            if (!(overlayMessage instanceof MutableText)) {
-                overlayMessage = overlayMessage.copy();
-                MinecraftClient.getInstance().inGameHud.overlayMessage = overlayMessage;
-            }
 
             List<Text> siblings = overlayMessage.getSiblings();
 
             if (siblings != null) {
-                siblings.remove(lastText);
+                try {
+                    siblings.remove(lastText);
+                } catch (UnsupportedOperationException e) {
+                    overlayMessage = overlayMessage.copy();
+                    overlayMessage.getSiblings().remove(lastText);
+                    MinecraftClient.getInstance().inGameHud.overlayMessage = overlayMessage;
+                }
             }
         }
     }

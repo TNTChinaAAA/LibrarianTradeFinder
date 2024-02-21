@@ -62,7 +62,9 @@ public class TradeFinder {
     public static int placeDelay = 2;
     public static int interactDelay = 2;
 
-    public static int resetDelay = 80;
+    public static int resetDelay = 85;
+
+    public static int aimDelay = 2;
 
     public static int recipeIndex = 0;
 
@@ -266,6 +268,13 @@ public class TradeFinder {
                 }
             } else if (LibrarianTradeFinder.getConfig().legitMode) {
                 player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, villagerPosition);
+            }
+
+            if (LibrarianTradeFinder.getConfig().slowMode) {
+                if (aimDelay > 0) {
+                    aimDelay--;
+                    return;
+                }
             }
 
             resetAllParams();
@@ -494,6 +503,7 @@ public class TradeFinder {
 
     public static void resetAllParams() {
         resetResetDelay();
+        resetAimDelay();
         placeDelay = Integer.parseInt(SlowModeHandler.placeDelay.getText());
         interactDelay = Integer.parseInt(SlowModeHandler.interactDelay.getText());
         resetCheckLook();
@@ -550,22 +560,15 @@ public class TradeFinder {
         finishedAimLook = false;
     }
 
+    public static void resetAimDelay() {
+        boolean a = new Random().nextBoolean();
+        int b = new Random().nextInt(3);
+        aimDelay = b + 2;
+    }
+
     public static void resetResetDelay() {
         boolean a = new Random().nextBoolean();
         int b = new Random().nextInt(3);
-        resetDelay = Integer.parseInt(ResetLecternModeHandler.delay.getText()) + (a ? -b : b);
-    }
-
-    public static void printLookParams() {
-        LibrarianTradeFinder.LOGGER.info("--------------------------------------------");
-        LibrarianTradeFinder.LOGGER.info("Speed: " + RotationTools.speed);
-        LibrarianTradeFinder.LOGGER.info("Rotated: " + RotationTools.isRotated);
-        LibrarianTradeFinder.LOGGER.info("Finished Check Look: " + finishedCheckLook);
-        LibrarianTradeFinder.LOGGER.info("Started Check Look: " + startedCheckLook);
-        LibrarianTradeFinder.LOGGER.info("Finished Break Look: " + finishedBreakLook);
-        LibrarianTradeFinder.LOGGER.info("Started Break Look: " + startedBreakLook);
-        LibrarianTradeFinder.LOGGER.info("Finished Place Look: " + finishedPlaceLook);
-        LibrarianTradeFinder.LOGGER.info("Started Place Look: " + startedPlaceLook);
-        LibrarianTradeFinder.LOGGER.info("--------------------------------------------");
+        resetDelay = Integer.parseInt(ResetLecternModeHandler.resetDelay.getText()) + (a ? -b : b);
     }
 }
